@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { TaskList } from '../components/TaskList';
 import type { Task } from '../types/task';
@@ -55,5 +55,58 @@ describe('TaskList', () => {
 		expect(screen.getByText('2 tâches')).toBeInTheDocument();
 	});
 
-	// ... TODO: Add more tests
+	it('shows empty state when there are no tasks', () => {
+		render(
+			<TaskList
+				tasks={[]}
+				loading={false}
+				error={null}
+				onToggle={vi.fn()}
+				onDelete={vi.fn()}
+				onEdit={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByTestId('empty')).toBeInTheDocument();
+		expect(screen.getByText('Aucune tâche')).toBeInTheDocument();
+	});
+
+	it('shows error state', () => {
+		render(
+			<TaskList
+				tasks={[]}
+				loading={false}
+				error="Impossible de charger"
+				onToggle={vi.fn()}
+				onDelete={vi.fn()}
+				onEdit={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByTestId('error')).toBeInTheDocument();
+		expect(screen.getByText('Erreur : Impossible de charger')).toBeInTheDocument();
+	});
+
+	it('passes callbacks to task items', () => {
+		const onToggle = vi.fn();
+		const onDelete = vi.fn();
+		const onEdit = vi.fn();
+
+		render(
+			<TaskList
+				tasks={mockTasks}
+				loading={false}
+				error={null}
+				onToggle={onToggle}
+				onDelete={onDelete}
+				onEdit={onEdit}
+			/>
+		);
+
+		fireEvent.click(screen.getAllByRole('checkbox')[0]);
+		fireEvent.click(screen.getAllByRole('button', { name: 'Modifier' })[0]);
+
+		expect(onToggle).toHaveBeenCalledWith(1);
+		expect(screen.getByLabelText('Modifier le titre')).toBeInTheDocument();
+	});
 });
